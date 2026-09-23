@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Calculate your precise age in years, months, and days, lifetime totals, and time until your next birthday instantly.">
+  <title>Age Calculator</title>
+
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       CSS DESIGN SYSTEM & THEME TOKENS (Phase 2)
+       ========================================================================== */
+    :root {
+      /* Colors */
+      --bg-gradient: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 80%);
+      --card-bg: rgba(30, 41, 59, 0.75);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --card-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 40px rgba(99, 102, 241, 0.15);
+
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+
+      --input-bg: rgba(15, 23, 42, 0.6);
+      --input-border: rgba(255, 255, 255, 0.12);
+      --input-focus: #818cf8;
+
+      --btn-primary-bg: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      --btn-primary-hover: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+      --btn-primary-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+
+      --btn-secondary-bg: rgba(71, 85, 105, 0.4);
+      --btn-secondary-hover: rgba(100, 116, 139, 0.6);
+      --btn-secondary-text: #cbd5e1;
+
+      --error-bg: rgba(244, 63, 94, 0.12);
+      --error-border: rgba(244, 63, 94, 0.3);
+      --error-text: #fb7185;
+
+      --metric-bg: rgba(15, 23, 42, 0.5);
+      --metric-border: rgba(255, 255, 255, 0.06);
+      --accent-color: #38bdf8;
+      --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+
+      /* Fonts & Radius */
+      --font-heading: 'Outfit', system-ui, sans-serif;
+      --font-body: 'Inter', system-ui, sans-serif;
+      --radius-card: 1.75rem;
+      --radius-btn: 0.875rem;
+      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-body);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--bg-gradient);
+      background-attachment: fixed;
+      color: var(--text-main);
+      padding: clamp(1rem, 4vw, 2.5rem);
+      padding-top: max(clamp(1rem, 4vw, 2.5rem), env(safe-area-inset-top));
+      padding-bottom: max(clamp(1rem, 4vw, 2.5rem), env(safe-area-inset-bottom));
+      padding-left: max(clamp(1rem, 4vw, 2.5rem), env(safe-area-inset-left));
+      padding-right: max(clamp(1rem, 4vw, 2.5rem), env(safe-area-inset-right));
+    }
+
+    /* App Container */
+    .app-card {
+      width: 100%;
+      max-width: 520px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-card);
+      padding: clamp(1.5rem, 5vw, 2.5rem);
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+    }
+
+    /* Header */
+    .app-header {
+      text-align: center;
+    }
+
+    .app-title {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 5vw, 2.25rem);
+      font-weight: 800;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+    }
+
+    .app-subtitle {
+      font-size: clamp(0.875rem, 2.5vw, 0.95rem);
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+
+    /* Form & Input */
+    .age-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+      letter-spacing: 0.01em;
+    }
+
+    .date-input {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius-btn);
+      padding: 0.875rem 1rem;
+      font-family: inherit;
+      font-size: 1rem;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      color-scheme: dark;
+    }
+
+    .date-input:focus-visible {
+      border-color: var(--input-focus);
+      box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25);
+    }
+
+    /* Inline Validation Error */
+    .error-message {
+      font-size: 0.85rem;
+      color: var(--error-text);
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      padding: 0.6rem 0.875rem;
+      border-radius: 0.625rem;
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+
+    .error-message.visible {
+      display: flex;
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+
+    /* Buttons */
+    .button-group {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      appearance: none;
+      border: none;
+      outline: none;
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 0.875rem 1.25rem;
+      border-radius: var(--radius-btn);
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.08s ease, background var(--transition), box-shadow var(--transition);
+      touch-action: manipulation;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--input-focus);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background: var(--btn-primary-bg);
+      color: #ffffff;
+      box-shadow: var(--btn-primary-shadow);
+    }
+
+    .btn-primary:hover {
+      background: var(--btn-primary-hover);
+      box-shadow: 0 6px 24px rgba(99, 102, 241, 0.55);
+    }
+
+    .btn-secondary {
+      background: var(--btn-secondary-bg);
+      color: var(--btn-secondary-text);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-secondary:hover {
+      background: var(--btn-secondary-hover);
+    }
+
+    /* Results Section */
+    .results-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .primary-result-card {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(56, 189, 248, 0.15) 100%);
+      border: 1px solid rgba(129, 140, 248, 0.25);
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .result-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-color);
+    }
+
+    .primary-age-display {
+      font-family: var(--font-heading);
+      font-size: clamp(1.5rem, 5vw, 2rem);
+      font-weight: 800;
+      color: var(--text-main);
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+
+    .primary-age-display .unit {
+      font-weight: 500;
+      font-size: 0.85em;
+      color: var(--text-muted);
+    }
+
+    /* Secondary Metrics Grid */
+    .secondary-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+
+    .metric-card {
+      background: var(--metric-bg);
+      border: 1px solid var(--metric-border);
+      border-radius: 1rem;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .metric-card-wide {
+      grid-column: span 2;
+    }
+
+    .metric-title {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .metric-value {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 400px) {
+      .button-group {
+        grid-template-columns: 1fr;
+      }
+      .secondary-metrics-grid {
+        grid-template-columns: 1fr;
+      }
+      .metric-card-wide {
+        grid-column: span 1;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .results-section, .error-message, .btn {
+        animation: none !important;
+        transition: none !important;
+      }
+      .btn:active {
+        transform: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="app-card" aria-label="Age Calculator Application">
+    <header class="app-header">
+      <h1 class="app-title">Age Calculator</h1>
+      <p class="app-subtitle">Discover your exact age breakdown and next birthday countdown</p>
+    </header>
+
+    <!-- Input Form Component -->
+    <form id="age-form" class="age-form" novalidate>
+      <div class="form-group">
+        <label for="dob" class="form-label">Date of Birth</label>
+        <input type="date" id="dob" name="dob" class="date-input" aria-describedby="error-message" required>
+        <div id="error-message" class="error-message" aria-live="polite" role="alert"></div>
+      </div>
+
+      <div class="button-group">
+        <button type="submit" id="calc-btn" class="btn btn-primary">Calculate Age</button>
+        <button type="button" id="reset-btn" class="btn btn-secondary">Reset</button>
+      </div>
+    </form>
+
+    <!-- Results Display Section -->
+    <section id="results-section" class="results-section hidden" aria-label="Calculation Results" aria-live="polite">
+      <!-- Primary Result Display -->
+      <div class="primary-result-card">
+        <span class="result-label">Your Age</span>
+        <div class="primary-age-display">
+          <span id="years-val">0</span> <span class="unit">Years</span>, 
+          <span id="months-val">0</span> <span class="unit">Months</span>, 
+          <span id="days-val">0</span> <span class="unit">Days</span>
+        </div>
+      </div>
+
+      <!-- Secondary Supporting Metrics Grid -->
+      <div class="secondary-metrics-grid">
+        <div class="metric-card">
+          <span class="metric-title">Total Years</span>
+          <span id="metric-total-years" class="metric-value">0</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-title">Total Months</span>
+          <span id="metric-total-months" class="metric-value">0</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-title">Total Days</span>
+          <span id="metric-total-days" class="metric-value">0</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-title">Next Birthday</span>
+          <span id="metric-next-bday-date" class="metric-value">-</span>
+        </div>
+
+        <div class="metric-card metric-card-wide">
+          <span class="metric-title">Days Until Next Birthday</span>
+          <span id="metric-days-until-bday" class="metric-value">0</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /* ==========================================================================
+       CORE DATE LOGIC & AGE ENGINE (Phase 3 & Phase 4)
+       ========================================================================== */
+    (function () {
+      const form = document.getElementById('age-form');
+      const dobInput = document.getElementById('dob');
+      const errorMsg = document.getElementById('error-message');
+      const resetBtn = document.getElementById('reset-btn');
+      const resultsSection = document.getElementById('results-section');
+
+      // Primary display outputs
+      const yearsVal = document.getElementById('years-val');
+      const monthsVal = document.getElementById('months-val');
+      const daysVal = document.getElementById('days-val');
+
+      // Secondary metric outputs
+      const totalYearsVal = document.getElementById('metric-total-years');
+      const totalMonthsVal = document.getElementById('metric-total-months');
+      const totalDaysVal = document.getElementById('metric-total-days');
+      const nextBdayDateVal = document.getElementById('metric-next-bday-date');
+      const daysUntilBdayVal = document.getElementById('metric-days-until-bday');
+
+      /**
+       * Check if a given year is a leap year
+       */
+      function isLeapYear(year) {
+        return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+      }
+
+      /**
+       * Get exact number of days in a specific month of a specific year
+       */
+      function getDaysInMonth(year, monthIndex) {
+        return new Date(year, monthIndex + 1, 0).getDate();
+      }
+
+      /**
+       * Show Inline Validation Error Message
+       */
+      function showError(msg) {
+        errorMsg.textContent = msg;
+        errorMsg.classList.add('visible');
+        dobInput.classList.add('input-error');
+        resultsSection.classList.add('hidden');
+      }
+
+      /**
+       * Hide Validation Error Message
+       */
+      function hideError() {
+        errorMsg.textContent = '';
+        errorMsg.classList.remove('visible');
+        dobInput.classList.remove('input-error');
+      }
+
+      /**
+       * Format Date to Long Human Readable String (e.g. "March 14, 2027")
+       */
+      function formatDateLong(dateObj) {
+        return dateObj.toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric'
+        });
+      }
+
+      /**
+       * Format number with localized comma separators
+       */
+      function formatNumber(num) {
+        return num.toLocaleString('en-US');
+      }
+
+      /**
+       * Core Age & Next Birthday Computation Engine
+       */
+      function calculateAge(dobStr) {
+        // 1. Validation Rules
+        if (!dobStr || dobStr.trim() === '') {
+          showError('Please enter your date of birth.');
+          return;
+        }
+
+        // Parse YYYY-MM-DD input cleanly into local Date
+        const parts = dobStr.split('-');
+        if (parts.length !== 3) {
+          showError('Please enter a valid date of birth.');
+          return;
+        }
+
+        const birthYear = parseInt(parts[0], 10);
+        const birthMonth = parseInt(parts[1], 10) - 1; // 0-indexed
+        const birthDay = parseInt(parts[2], 10);
+
+        const birthDate = new Date(birthYear, birthMonth, birthDay);
+        
+        // Current device date normalized to midnight local time
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        // 1. Validation Rules
+        if (!dobStr || isNaN(birthDate.getTime())) {
+          showError('Please enter your date of birth.');
+          return;
+        }
+
+        if (birthDate > today) {
+          showError("Date of birth can't be in the future.");
+          return;
+        }
+
+        hideError();
+
+        // 2. Calendar-Aware Elapsed Years, Months, and Days
+        let years = today.getFullYear() - birthYear;
+        let months = today.getMonth() - birthMonth;
+        let days = today.getDate() - birthDay;
+
+        if (days < 0) {
+          months -= 1;
+          // Days in previous month of current date
+          const prevMonthIndex = today.getMonth() === 0 ? 11 : today.getMonth() - 1;
+          const prevMonthYear = today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
+          days += getDaysInMonth(prevMonthYear, prevMonthIndex);
+        }
+
+        if (months < 0) {
+          years -= 1;
+          months += 12;
+        }
+
+        // 3. Lifetime Totals
+        const totalMonths = years * 12 + months;
+        const totalDays = Math.floor((today - birthDate) / (1000 * 60 * 60 * 24));
+
+        // 4. Next Birthday Engine
+        let targetYear = today.getFullYear();
+        
+        function getNextBdayForYear(yr) {
+          let m = birthMonth;
+          let d = birthDay;
+          if (m === 1 && d === 29 && !isLeapYear(yr)) {
+            d = 28; // Feb 29 birth resolves to Feb 28 in non-leap year
+          }
+          return new Date(yr, m, d);
+        }
+
+        let nextBday = getNextBdayForYear(targetYear);
+
+        if (nextBday < today) {
+          targetYear += 1;
+          nextBday = getNextBdayForYear(targetYear);
+        }
+
+        const daysUntilNextBday = Math.round((nextBday - today) / (1000 * 60 * 60 * 24));
+
+        // 5. Populate Results UI
+        yearsVal.textContent = formatNumber(years);
+        monthsVal.textContent = formatNumber(months);
+        daysVal.textContent = formatNumber(days);
+
+        totalYearsVal.textContent = formatNumber(years);
+        totalMonthsVal.textContent = formatNumber(totalMonths);
+        totalDaysVal.textContent = formatNumber(totalDays);
+        nextBdayDateVal.textContent = formatDateLong(nextBday);
+        daysUntilBdayVal.textContent = daysUntilNextBday === 0 ? 'Today! 🎉' : `${formatNumber(daysUntilNextBday)} days`;
+
+        // 6. Reveal Results Section with Animation
+        resultsSection.classList.remove('hidden');
+      }
+
+      /**
+       * Event Handlers
+       */
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        calculateAge(dobInput.value);
+      });
+
+      dobInput.addEventListener('input', () => {
+        hideError();
+      });
+
+      resetBtn.addEventListener('click', () => {
+        dobInput.value = '';
+        hideError();
+        resultsSection.classList.add('hidden');
+        dobInput.focus();
+      });
+
+      // Global Expose for Automated Verification Scripting
+      window.AgeCalculatorEngine = {
+        calculateAge,
+        hideError,
+        showError
+      };
+    })();
+  </script>
+</body>
+</html>
